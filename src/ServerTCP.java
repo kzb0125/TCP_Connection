@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.*;
 
@@ -38,19 +39,19 @@ public class ServerTCP {
         while (!clientSock.isClosed()) {
             System.out.println("Waiting for client request...\n\n");
             // wait for client request
-            InputStream codedRequest = clientSock.getInputStream();
+            InputStream requestStream = clientSock.getInputStream();
+            DataInputStream encodedRequest = new DataInputStream(requestStream);
+            System.out.println("Client Request Received");
 
             // decode client request
             System.out.println("Initiating decoding sequence...\n");
-            Request clientRequest = decoder.decodeRequest(codedRequest);
+            Request clientRequest = decoder.decodeRequest(requestStream);
 
             // display the request byte by byte
             System.out.println("================== REQUEST DATA ==================");
-            byte[] codedRequestByte = codedRequest.readAllBytes();
-            String[] requestHex = new String[codedRequestByte.length];
-            for (int i = 0; i < codedRequestByte.length; i++) {
-                requestHex[i] = String.format("%02X", codedRequestByte[i]);
-                System.out.printf("%s ", requestHex[i]);
+            String[] requestHex = new String[clientRequest.tml];
+            for (int i = 0; i < clientRequest.tml; i++) {
+                requestHex[i] = String.format("%02X", encodedRequest.readByte());
             }
             System.out.println("\n==================================================\n");
 
@@ -60,7 +61,7 @@ public class ServerTCP {
             RequestCalc calcRequest = new RequestCalc(clientRequest);
             tml = 8;
             requestResult = calcRequest.calcResult;
-            errorCode = (clientRequest.tml == codedRequest.readAllBytes().length) ? 0 : 127;
+            errorCode = (clientRequest.tml == requestStream.readAllBytes().length) ? 0 : 127;
             requestID = clientRequest.requestID;
             serverResponse = new Response(tml, requestResult, errorCode, requestID);
             System.out.println("Calculating complete\n");

@@ -22,13 +22,9 @@ public class RequestDecoderBin implements RequestDecoder, RequestBinConst {
         int opNameLength = src.readByte();
 
         //Deal with the Op Name
-        int stringLength = src.read(); // Returns an unsigned byte as an int
-        if (stringLength == -1)
-            throw new EOFException();
-        byte[] stringBuf = new byte[stringLength];
+        byte[] stringBuf = new byte[opNameLength];
         src.readFully(stringBuf);
         String opName = new String(stringBuf, encoding);
-
         return new Request(tml,opCode, operand1, operand2, requestID, opNameLength, opName);
     }
 
