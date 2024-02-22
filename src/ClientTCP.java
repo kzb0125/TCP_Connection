@@ -20,6 +20,7 @@ public class ClientTCP {
     static double avgTime = 0.;
     static int numRequest = 0;
     static Socket sock;
+    static OutputStream out;
     static int quit = 0;
 
     public static void main(String[] args) throws Exception {
@@ -43,7 +44,7 @@ public class ClientTCP {
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
         do {
-            getRequestInfo();                                           // Prompt user for operation Request info
+            getRequestInfo();                                    // Prompt user for operation Request info
             if (quit == 1) { exitClient();}
 
             // create clientRequest object
@@ -51,17 +52,6 @@ public class ClientTCP {
 
             // Encode the request and convert to encoded byte[]
             byte[] codedRequest = encoder.encode(clientRequest);        // Encode client request
-
-            // client Request data
-            System.out.println("==================== CLIENT REQUEST =================================");
-            System.out.printf("TML: %d\n", tml);
-            System.out.printf("OPCODE: %d\n", opCode);
-            System.out.printf("OPERAND1: %d\n", operand1);
-            System.out.printf("OPERAND2: %d\n", operand2);
-            System.out.printf("REQUESTID: %d\n", requestID);
-            System.out.printf("OPNAMELEN: %d\n", opNameLength);
-            System.out.printf("OPNAME: %s\n", opName);
-            System.out.println("\n===================================================================\n");
 
             // display request data as hexadecimal
             System.out.println("==================== REQUEST DATA =================================");
@@ -74,7 +64,7 @@ public class ClientTCP {
 
             // send the encoded request to server
             long startTime = System.nanoTime();
-            OutputStream out = sock.getOutputStream();                  // Initialize output stream handler
+            out = sock.getOutputStream();                  // Initialize output stream handler
             out.write(codedRequest);                                    // Send client request to ServerTCP
 
 
@@ -253,10 +243,9 @@ public class ClientTCP {
     }
 
     private static void exitClient() throws IOException {
-//        OutputStream out = sock.getOutputStream();                  // Initialize output stream handler
-//        out.write(-1);
-        sock.close();
+        out.close();
         System.out.println("\n ***** ClientTCP Disconnected *****\n");
+        sock.close();
     }
 }
 
