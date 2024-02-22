@@ -13,6 +13,7 @@ public class RequestEncoderBin implements RequestEncoder, RequestBinConst {
         this.encoding = encoding;
     }
 
+    // encode client request before sending to server
     public byte[] encode(Request clientRequest) throws Exception {
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -33,6 +34,8 @@ public class RequestEncoderBin implements RequestEncoder, RequestBinConst {
         return buf.toByteArray();
     }
 
+    // encode server response before sending to client
+    @Override
     public byte[] encode(Response serverResponse) throws Exception {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(buf);
