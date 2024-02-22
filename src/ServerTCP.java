@@ -1,6 +1,8 @@
 import javax.xml.crypto.Data;
 import java.io.*;
+import java.lang.reflect.GenericDeclaration;
 import java.net.*;
+import java.util.Arrays;
 
 public class ServerTCP {
 
@@ -10,6 +12,8 @@ public class ServerTCP {
     static int requestID;
     static int port;
     static Response serverResponse;
+    static int MAX_WIRE_LENGTH  = 41;
+
     public static void main(String[] args) throws Exception {
 
         // Checks port number was provided as arg
@@ -36,22 +40,47 @@ public class ServerTCP {
         System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++");
 
         System.out.println();
-        while (!clientSock.isClosed()) {
+        while (true) {          //!clientSock.isClosed()
             System.out.println("Waiting for client request...\n\n");
             // wait for client request
-            InputStream requestStream = clientSock.getInputStream();
-            DataInputStream encodedRequest = new DataInputStream(requestStream);
-            System.out.println("Client Request Received");
+            InputStream inputStream = clientSock.getInputStream();
+            // store client request into temp byte[]
+            byte[] inputBytes = new byte[MAX_WIRE_LENGTH];
+            int bytesRead = inputStream.read(inputBytes);
+            byte[] encodedBytes = new byte[bytesRead];
+            System.arraycopy(inputBytes, 0, encodedBytes, 0, encodedBytes.length);
+            System.out.println(Arrays.toString(encodedBytes));
 
+            ByteArrayInputStream byteInputStream = new ByteArrayInputStream(encodedBytes);
+            /*
+            ByteArrayInputStream payloadIn = new ByteArrayInputStream(clientSock.getInputStream().readAllBytes());
+            payloadIn.mark(1);
+
+            System.out.println(payloadIn.markSupported());
+
+            System.out.println("available: " + payloadIn.available());
+            int inputSize = payloadIn.available();
+            System.out.println("inputSize: " + inputSize);
+
+            byte[] encodedBytes = new byte[inputSize];
+            int byteLength = payloadIn.readNBytes(encodedBytes,0,inputSize);
+
+            System.out.println("byteLength: " + byteLength);
+            System.out.println(Arrays.toString(encodedBytes));
+            */
             // decode client request
             System.out.println("Initiating decoding sequence...\n");
-            Request clientRequest = decoder.decodeRequest(requestStream);
+            //payloadIn.reset();
+            Request clientRequest = decoder.decodeRequest(byteInputStream);
+            System.out.println("clientRequest.TML: " + clientRequest.tml);
+            System.out.println("clientRequest.opLen: " + clientRequest.opNameLength);
 
             // display the request byte by byte
             System.out.println("================== REQUEST DATA ==================");
-            String[] requestHex = new String[clientRequest.tml];
-            for (int i = 0; i < clientRequest.tml; i++) {
-                requestHex[i] = String.format("%02X", encodedRequest.readByte());
+            String[] requestHex = new String[encodedBytes.length];
+            for (int j = 0; j < encodedBytes.length; j++) {
+                requestHex[j] = String.format("%02X", encodedBytes[j]);
+                System.out.printf("%s ", requestHex[j]);
             }
             System.out.println("\n==================================================\n");
 
@@ -61,7 +90,7 @@ public class ServerTCP {
             RequestCalc calcRequest = new RequestCalc(clientRequest);
             tml = 8;
             requestResult = calcRequest.calcResult;
-            errorCode = (clientRequest.tml == requestStream.readAllBytes().length) ? 0 : 127;
+            errorCode = (clientRequest.tml == encodedBytes.length) ? 0 : 127;
             requestID = clientRequest.requestID;
             serverResponse = new Response(tml, requestResult, errorCode, requestID);
             System.out.println("Calculating complete\n");
@@ -78,9 +107,9 @@ public class ServerTCP {
             out.write(codedResponse);
 
 
-        };
+        }
 
-        clientSock.close();
-        serverSock.close();
+        //clientSock.close();
+        //serverSock.close();
     }
 }

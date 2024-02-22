@@ -77,8 +77,9 @@ public class ClientTCP {
             OutputStream out = sock.getOutputStream();                  // Initialize output stream handler
             out.write(codedRequest);                                    // Send client request to ServerTCP
 
+
             // wait for server response
-            InputStream codedResponse = sock.getInputStream();
+            InputStream byteServerResponse = sock.getInputStream();
 
             // response time as ms
             long endTime = System.nanoTime();
@@ -89,18 +90,21 @@ public class ClientTCP {
             if (responseTime < minTime) {minTime = responseTime;}
             avgTime = totalTime/numRequest;
 
-            // decode server reply
-            Response serverResponse = decoder.decodeResponse(codedResponse);
-
             // display server reply as hexadecimal
             System.out.println("======== REPLY DATA ========");
-            byte[] codedReply = codedResponse.readAllBytes();
-            String[] replyHex = new String[codedResponse.readAllBytes().length];
-            for (int i = 0; i < codedResponse.readAllBytes().length; i++) {
-                replyHex[i] = String.format("%02X", codedReply[i]);
+            byte[] encodedReply = new byte[8];
+            int bytesRead = byteServerResponse.read(encodedReply);
+            String[] replyHex = new String[bytesRead];
+            for (int i = 0; i < encodedReply.length; i++) {
+                replyHex[i] = String.format("%02X", encodedReply[i]);
                 System.out.printf("%s ", replyHex[i]);
             }
             System.out.println("\n============================");
+
+
+            // decode server reply
+            ByteArrayInputStream codedResponse = new ByteArrayInputStream(encodedReply);
+            Response serverResponse = decoder.decodeResponse(codedResponse);
 
             // display the server reply in readable text
             System.out.println("\n=========== SERVER REPLY ===========");
