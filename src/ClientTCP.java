@@ -21,6 +21,7 @@ public class ClientTCP {
     static int numRequest = 0;
     static Socket sock;
     static int quit = 0;
+
     public static void main(String[] args) throws Exception {
 
         // check server name and port number was provided as arg
@@ -48,7 +49,7 @@ public class ClientTCP {
             // create clientRequest object
             Request clientRequest = new Request(tml, opCode, operand1, operand2, requestID, opNameLength, opName);
 
-            // Encode the request and convert to DatagramPacket
+            // Encode the request and convert to encoded byte[]
             byte[] codedRequest = encoder.encode(clientRequest);        // Encode client request
 
             // display request data as hexadecimal
@@ -78,7 +79,7 @@ public class ClientTCP {
             avgTime = totalTime/numRequest;
 
             // decode server reply
-            Response serverReply = decoder.decodeResponse(codedResponse);
+            Response serverResponse = decoder.decodeResponse(codedResponse);
 
             // display server reply as hexadecimal
             System.out.println("======== REPLY DATA ========");
@@ -92,9 +93,9 @@ public class ClientTCP {
 
             // display the server reply in readable text
             System.out.println("\n=========== SERVER REPLY ===========");
-            System.out.printf("Request ID: %d%n", serverReply.requestID);
-            System.out.printf("Result: %d%n", serverReply.result);
-            System.out.println("Error Code: " + ((serverReply.errorCode == 0) ? "OK" : "127"));
+            System.out.printf("Request ID: %d%n", serverResponse.requestID);
+            System.out.printf("Result: %d%n", serverResponse.result);
+            System.out.println("Error Code: " + ((serverResponse.errorCode == 0) ? "OK" : "127"));
             System.out.printf("Response Time: %.3f ms%n", responseTime);
             System.out.printf("min_Time: %.3f ms%n", minTime);
             System.out.printf("avg_Time: %.3f ms%n", avgTime);
@@ -127,8 +128,6 @@ public class ClientTCP {
             }
 
         } while (quit == 0);
-
-        exitClient();
     }
 
     // get userInput
@@ -239,8 +238,10 @@ public class ClientTCP {
     }
 
     private static void exitClient() throws IOException {
-        System.out.println("\n ***** ClientTCP Disconnected *****\n");
+//        OutputStream out = sock.getOutputStream();                  // Initialize output stream handler
+//        out.write(-1);
         sock.close();
+        System.out.println("\n ***** ClientTCP Disconnected *****\n");
     }
 }
 
